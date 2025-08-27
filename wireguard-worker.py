@@ -5,6 +5,8 @@ import os
 import ipaddress
 import subprocess
 import qrcode
+import base64
+import mimetypes
 from pathlib import Path
 from xml.dom import minidom
 from suds.client import Client
@@ -140,7 +142,8 @@ def SendKey(ticketInfo, conf_path, qr_path=None):
     keyfiles = [
         {
             'KeyContent': conf_content,
-            'KeyName': os.path.basename(conf_path)
+            'KeyName': os.path.basename(conf_path),
+            'MediaType' : 'text/plain'
         }
     ]
 
@@ -148,9 +151,16 @@ def SendKey(ticketInfo, conf_path, qr_path=None):
     if qr_path and os.path.exists(qr_path):
         with open(qr_path, "rb") as f:
             qr_bytes = f.read()
+        
+        # Detect content type automatically (e.g. image/png, image/jpeg)
+        mime_type, _ = mimetypes.guess_type(qr_path)
+        if not mime_type:
+            mime_type = "application/octet-stream"  # fallback
+        
         keyfiles.append({
             'KeyContent': qr_bytes.decode("latin1"),   # or use base64.b64encode(qr_bytes).decode()
-            'KeyName': os.path.basename(qr_path)
+            'KeyName': os.path.basename(qr_path),
+            'MediaType' : mime_type
         })
 
     # prepare payload
