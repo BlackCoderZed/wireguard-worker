@@ -131,17 +131,40 @@ def ReadConfig(path):
     with open(path, 'r') as f:
         return f.read()
 
-def SendKey(ticketInfo, conf_path, qr_path):
+def SendKey(ticketInfo, conf_path, qr_path=None):
     print('Sending to API...')
-    keycontent = ReadConfig(conf_path)
+
+    # read .conf file content
+    conf_content = ReadConfig(conf_path)
+
+    keyfiles = [
+        {
+            'KeyContent': conf_content,
+            'KeyName': os.path.basename(conf_path)
+        }
+    ]
+
+    # if QR code exists, attach it as binary (convert to base64 if API expects text)
+    if qr_path and os.path.exists(qr_path):
+        with open(qr_path, "rb") as f:
+            qr_bytes = f.read()
+        keyfiles.append({
+            'KeyContent': qr_bytes.decode("latin1"),   # or use base64.b64encode(qr_bytes).decode()
+            'KeyName': os.path.basename(qr_path)
+        })
+
+    # prepare payload
     emailSendInfo = {
         'ServerID': SERVER_ID,
         'Email': ticketInfo.Email,
-        'KeyContent': keycontent,
-        'KeyName': os.path.basename(conf_path)
+        'Subject': 'WireGuard by IT-Solution',
+        'KeyFiles': keyfiles
     }
+
+    # send to API
     client = Client(API_URL)
-    client.service.SendKey(AUTH_INFO, emailSendInfo)
+    client.service.SendMultipleKey(AUTH_INFO, emailSendInfo)
+
     print('Complete...')
 
 #########################################################################################
