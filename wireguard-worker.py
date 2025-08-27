@@ -129,54 +129,42 @@ def UpdateTicketInfo(ticketInfo):
     client.service.CompleteInstructionTicket(AUTH_INFO, ticketInfo.TicketId, SERVER_ID)
     print('Updated')
 
-def ReadConfig(path):
-    with open(path, 'r') as f:
+def ReadConfig(conf_path):
+    with open(conf_path, "r", encoding="utf-8") as f:
         return f.read()
 
-def SendKey(ticketInfo, conf_path, qr_path=None):
+def ReadFileAsBase64(file_path):
+    with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+def SendKey(ticketInfo, conf_path, qr_path):
     print('Sending to API...')
 
-    # read .conf file content
-    conf_content = ReadConfig(conf_path)
+    # Read .conf as plain text
+    keycontent_conf = ReadConfig(conf_path)
+
+    # Read QR code as base64 string
+    keycontent_qr = ReadFileAsBase64(qr_path)
 
     keyfiles = [
         {
-            'KeyContent': conf_content,
+            'KeyContent': keycontent_conf,
             'KeyName': os.path.basename(conf_path),
-            'MediaType' : 'text/plain'
+            'MediaType': 'text/plain'
         }
     ]
 
-    # if QR code exists, attach it as binary (convert to base64 if API expects text)
-    if qr_path and os.path.exists(qr_path):
-        with open(qr_path, "rb") as f:
-            qr_bytes = f.read()
-        
-        # Detect content type automatically (e.g. image/png, image/jpeg)
-        mime_type, _ = mimetypes.guess_type(qr_path)
-        if not mime_type:
-            mime_type = "application/octet-stream"  # fallback
-        
-        keyfiles.append({
-            'KeyContent': qr_bytes.decode("latin1"),   # or use base64.b64encode(qr_bytes).decode()
-            'KeyName': os.path.basename(qr_path),
-            'MediaType' : mime_type
-        })
-
-    # prepare payload
     emailSendInfo = {
         'ServerID': SERVER_ID,
         'Email': ticketInfo.Email,
-        'Subject': 'WireGuard by IT-Solution',
+        'Subject': 'Wireguard by IT-Solution',
         'KeyFiles': keyfiles
     }
 
-    # send to API
     client = Client(API_URL)
     client.service.SendMultipleKey(AUTH_INFO, emailSendInfo)
 
     print('Complete...')
-
 #########################################################################################
 #                                  WG Operations                                        #
 #########################################################################################
@@ -230,12 +218,12 @@ Endpoint = {endpoint}
 PersistentKeepalive = {PERSISTENT_KEEPALIVE}
 """
 
-    conf_filename = f"WG-{name}.conf"
+    conf_filename = f"{name}.conf"
     conf_path = str(Path(HOME_DIR) / conf_filename)
     with open(conf_path, "w") as f:
         f.write(client_conf)
 
-    qr_path = str(Path(HOME_DIR) / f"WG-{name}.png")
+    qr_path = str(Path(HOME_DIR) / f"{name}.png")
     img = qrcode.make(client_conf)
     img.save(qr_path)
 
