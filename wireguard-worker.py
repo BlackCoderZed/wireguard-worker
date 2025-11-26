@@ -16,11 +16,12 @@ from suds.client import Client
 #########################################################################################
 
 class Configuration:
-    def __init__(self, ServerId, ServerIP, SecretKey, IpPrefix, Port, SaveDir, ApiUrl):
+    def __init__(self, ServerId, ServerIP, SecretKey, IpPrefix, Ip6Prefix, Port, SaveDir, ApiUrl):
         self.ServerId = ServerId
         self.ServerIP = ServerIP
         self.SecretKey = SecretKey
         self.IpPrefix = IpPrefix
+        self.Ip6Prefix - Ip6Prefix
         self.Port = Port
         self.SaveDir = SaveDir
         self.ApiUrl = ApiUrl
@@ -33,10 +34,11 @@ class Configuration:
         serverIP = config.getElementsByTagName("ServerIP")[0].firstChild.data
         secretKey = config.getElementsByTagName("SecretKey")[0].firstChild.data
         ipPrefix = config.getElementsByTagName("IpPrefix")[0].firstChild.data
+        ip6Prefix = config.getElementsByTagName("Ip6Prefix")[0].firstChild.data
         port = config.getElementsByTagName("Port")[0].firstChild.data
         saveDir = config.getElementsByTagName("SaveDir")[0].firstChild.data
         apiUrl = config.getElementsByTagName("APIUrl")[0].firstChild.data
-        return Configuration(serverId, serverIP, secretKey, ipPrefix, port, saveDir, apiUrl)
+        return Configuration(serverId, serverIP, secretKey, ipPrefix, ip6Prefix, port, saveDir, apiUrl)
 
 #########################################################################################
 #                                     Models                                            #
