@@ -251,7 +251,6 @@ PublicKey = {server_pub}
 PresharedKey = {psk}
 AllowedIPs = {CLIENT_ALLOWED_IPS}
 Endpoint = {endpoint}
-PersistentKeepalive = {PERSISTENT_KEEPALIVE}
 """
 
     # Save client config & QR
