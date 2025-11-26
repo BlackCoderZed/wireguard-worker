@@ -141,33 +141,42 @@ def SendKey(ticketInfo, conf_path, qr_path):
     print("Sending to API...")
 
     keycontent_conf = ReadConfig(conf_path)
-    keyname = os.path.basename(conf_path)
+    keycontent_qr = ReadFileAsBase64(qr_path)
+
+    keyname_conf = os.path.basename(conf_path)
+    keyname_qr = os.path.splitext(keyname_conf)[0] + ".png"
 
     client = Client(API_URL)
 
-    # Create main request object
+    # Create main SOAP request
     req = client.factory.create("ns1:ReqMultiSendKeyInfo")
     req.Email = ticketInfo.Email
     req.ServerID = SERVER_ID
     req.Subject = "Wireguard by IT-Solution"
 
-    # Create list container for KeyFiles
+    # Create SOAP array of files
     req.KeyFiles = client.factory.create("ns1:ArrayOfKeyFileInfo")
     req.KeyFiles.KeyFileInfo = []
 
-    # Create KeyFileInfo object
-    kf = client.factory.create("ns1:KeyFileInfo")
-    kf.KeyContent = keycontent_conf
-    kf.KeyName = keyname
-    kf.MediaType = "text/plain"  # Only if exists in WSDL. If not, remove.
+    # ---------- 1) CONF FILE ----------
+    kf_conf = client.factory.create("ns1:KeyFileInfo")
+    kf_conf.KeyContent = keycontent_conf
+    kf_conf.KeyName = keyname_conf
+    kf_conf.MediaType = "text/plain"
+    req.KeyFiles.KeyFileInfo.append(kf_conf)
 
-    # Append item into SOAP list
-    req.KeyFiles.KeyFileInfo.append(kf)
+    # ---------- 2) QR PNG FILE ----------
+    kf_qr = client.factory.create("ns1:KeyFileInfo")
+    kf_qr.KeyContent = keycontent_qr
+    kf_qr.KeyName = keyname_qr
+    kf_qr.MediaType = "image/png"
+    req.KeyFiles.KeyFileInfo.append(kf_qr)
 
-    # Call SendMultipleKey
+    # Call API
     client.service.SendMultipleKey(AUTH_INFO, req)
 
     print("Complete...")
+
 
 #########################################################################################
 #                                  WG Operations                                        #
