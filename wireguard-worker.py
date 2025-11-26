@@ -55,7 +55,7 @@ class KeyInfo:
 #########################################################################################
 
 WG_INTERFACE = "wg0"
-CLIENT_DNS = "1.1.1.1"
+CLIENT_DNS = "1.1.1.1, 1.0.0.1"
 CLIENT_ALLOWED_IPS = "0.0.0.0/0, ::/0"
 PERSISTENT_KEEPALIVE = 25
 
@@ -79,42 +79,43 @@ def wg_show_dump():
 
 def list_used_ips():
     dump = wg_show_dump()
-    used = set()
+    used_ipv4 = set()
+    used_ipv6 = set()
     if not dump:
-        return used
+        return used_ipv4, used_ipv6
     for line in dump.splitlines():
         parts = line.split('\t')
         if len(parts) < 5:
             continue
         allowed = parts[4]
         for cidr in allowed.split(','):
+            cidr = cidr.strip()
             try:
-                net = ipaddress.ip_network(cidr.strip(), strict=False)
+                net = ipaddress.ip_network(cidr, strict=False)
                 if isinstance(net, ipaddress.IPv4Network) and net.prefixlen == 32:
-                    used.add(str(net.network_address))
+                    used_ipv4.add(str(net.network_address))
+                elif isinstance(net, ipaddress.IPv6Network) and net.prefixlen == 128:
+                    used_ipv6.add(str(net.network_address))
             except ValueError:
                 pass
-    return used
+    return used_ipv4, used_ipv6
 
-def next_available_ip(ip_prefix: str, used=None) -> str:
-    """Get next available IPv4 address"""
-    if used is None:
-        used = list_used_ips()
+
+def next_available_ip(ip_prefix: str) -> str:
+    used_ipv4, _ = list_used_ips()
     base = ip_prefix.rstrip('.') + '.'
     for last in range(2, 255):
         candidate = f"{base}{last}"
-        if candidate not in used:
+        if candidate not in used_ipv4:
             return candidate
     raise RuntimeError("No free IPv4 available")
 
-def next_available_ipv6(ipv6_prefix: str, used=None) -> str:
-    """Get next available IPv6 address"""
-    if used is None:
-        used = set()
+def next_available_ipv6(ipv6_prefix: str) -> str:
+    _, used_ipv6 = list_used_ips()
     base = ipv6_prefix.rstrip(':') + ':'
     for i in range(2, 65535):
         candidate = f"{base}{i:x}"
-        if candidate not in used:
+        if candidate not in used_ipv6:
             return candidate
     raise RuntimeError("No free IPv6 available")
 
