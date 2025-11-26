@@ -96,14 +96,16 @@ def list_used_ips():
                 pass
     return used
 
-def next_available_ip(ip_prefix: str) -> str:
-    used = list_used_ips()
+def next_available_ip(ip_prefix: str, used=None) -> str:
+    """Get next available IPv4 address"""
+    if used is None:
+        used = list_used_ips()
     base = ip_prefix.rstrip('.') + '.'
     for last in range(2, 255):
         candidate = f"{base}{last}"
         if candidate not in used:
             return candidate
-    raise RuntimeError("No free IP available")
+    raise RuntimeError("No free IPv4 available")
 
 def next_available_ipv6(ipv6_prefix: str, used=None) -> str:
     """Get next available IPv6 address"""
@@ -215,26 +217,33 @@ def generate_peer(ticketInfo):
     peer_dir = peers_dir / name
     ensure_dir(peer_dir)
 
+    # Generate keys
     privkey = run("wg genkey", capture=True)
     pubkey = run(f"echo '{privkey}' | wg pubkey", capture=True)
     psk = run("wg genpsk", capture=True)
 
+    # Save keys
     (peer_dir / "privkey").write_text(privkey + "\n")
     (peer_dir / "pubkey").write_text(pubkey + "\n")
     (peer_dir / "psk").write_text(psk + "\n")
 
-    client_ip = next_available_ip(IP_PREFIX)
-    (peer_dir / "ip").write_text(client_ip + "\n")
+    # Assign IPs
+    client_ip4 = next_available_ip(IP_PREFIX)
+    client_ip6 = next_available_ipv6(IPV6_PREFIX)
+    (peer_dir / "ip4").write_text(client_ip4 + "\n")
+    (peer_dir / "ip6").write_text(client_ip6 + "\n")
 
-    run(f"wg set {WG_INTERFACE} peer {pubkey} preshared-key {peer_dir/'psk'} allowed-ips {client_ip}/32")
+    # Add peer to server
+    run(f"wg set {WG_INTERFACE} peer {pubkey} preshared-key {peer_dir/'psk'} allowed-ips {client_ip4}/32,{client_ip6}/128")
     run(f"wg-quick save {WG_INTERFACE}")
 
+    # Build client config
     server_pub = server_public_key()
     endpoint = f"{SERVER_IP}:{SERVER_PORT}"
     client_conf = f"""[Interface]
 PrivateKey = {privkey}
-Address = {client_ip}/32
-DNS = {CLIENT_DNS}
+Address = {client_ip4}/32, {client_ip6}/128
+DNS = {CLIENT_DNS_PRIMARY}, {CLIENT_DNS_SECONDARY}
 
 [Peer]
 PublicKey = {server_pub}
@@ -244,12 +253,11 @@ Endpoint = {endpoint}
 PersistentKeepalive = {PERSISTENT_KEEPALIVE}
 """
 
-    conf_filename = f"{name}.conf"
-    conf_path = str(Path(HOME_DIR) / conf_filename)
+    # Save client config & QR
+    conf_path = str(Path(HOME_DIR) / f"{name}.conf")
+    qr_path = str(Path(HOME_DIR) / f"{name}.png")
     with open(conf_path, "w") as f:
         f.write(client_conf)
-
-    qr_path = str(Path(HOME_DIR) / f"{name}.png")
     img = qrcode.make(client_conf)
     img.save(qr_path)
 
