@@ -138,36 +138,36 @@ def ReadFileAsBase64(file_path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 def SendKey(ticketInfo, conf_path, qr_path):
-    print('Sending to API...')
+    print("Sending to API...")
 
     keycontent_conf = ReadConfig(conf_path)
-    keycontent_qr = ReadFileAsBase64(qr_path)
     keyname = os.path.basename(conf_path)
 
     client = Client(API_URL)
 
-    # Create ReqMultiSendKeyInfo object
-    req = client.factory.create("ReqMultiSendKeyInfo")
-    req.ServerID = SERVER_ID
+    # Create main request object
+    req = client.factory.create("ns1:ReqMultiSendKeyInfo")
     req.Email = ticketInfo.Email
+    req.ServerID = SERVER_ID
     req.Subject = "Wireguard by IT-Solution"
 
-    # Create KeyFiles list
-    req.KeyFiles = []
+    # Create list container for KeyFiles
+    req.KeyFiles = client.factory.create("ns1:ArrayOfKeyFileInfo")
+    req.KeyFiles.KeyFileInfo = []
 
     # Create KeyFileInfo object
-    keyfile = client.factory.create("KeyFileInfo")
-    keyfile.KeyContent = keycontent_conf
-    keyfile.KeyName = keyname
-    keyfile.MediaType = "text/plain"   # if exists in WSDL (else remove)
+    kf = client.factory.create("ns1:KeyFileInfo")
+    kf.KeyContent = keycontent_conf
+    kf.KeyName = keyname
+    kf.MediaType = "text/plain"  # Only if exists in WSDL. If not, remove.
 
-    # Add into list
-    req.KeyFiles.append(keyfile)
+    # Append item into SOAP list
+    req.KeyFiles.KeyFileInfo.append(kf)
 
-    # Call SOAP method
+    # Call SendMultipleKey
     client.service.SendMultipleKey(AUTH_INFO, req)
 
-    print('Complete...')
+    print("Complete...")
 
 #########################################################################################
 #                                  WG Operations                                        #
