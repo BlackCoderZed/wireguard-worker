@@ -166,11 +166,11 @@ def SendKey(ticketInfo, conf_path, qr_path):
     req.KeyFiles.KeyFileInfo.append(kf_conf)
 
     # ---------- 2) QR PNG FILE ----------
-    kf_qr = client.factory.create("ns1:KeyFileInfo")
-    kf_qr.KeyContent = keycontent_qr
-    kf_qr.KeyName = keyname_qr
-    kf_qr.MediaType = "image/png"
-    req.KeyFiles.KeyFileInfo.append(kf_qr)
+    #kf_qr = client.factory.create("ns1:KeyFileInfo")
+    #kf_qr.KeyContent = keycontent_qr
+    #kf_qr.KeyName = keyname_qr
+    #kf_qr.MediaType = "image/png"
+    #req.KeyFiles.KeyFileInfo.append(kf_qr)
 
     # Call API
     client.service.SendMultipleKey(AUTH_INFO, req)
