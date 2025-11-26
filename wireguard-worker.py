@@ -21,7 +21,7 @@ class Configuration:
         self.ServerIP = ServerIP
         self.SecretKey = SecretKey
         self.IpPrefix = IpPrefix
-        self.Ip6Prefix - Ip6Prefix
+        self.Ip6Prefix = Ip6Prefix
         self.Port = Port
         self.SaveDir = SaveDir
         self.ApiUrl = ApiUrl
@@ -229,7 +229,7 @@ def generate_peer(ticketInfo):
 
     # Assign IPs
     client_ip4 = next_available_ip(IP_PREFIX)
-    client_ip6 = next_available_ipv6(IPV6_PREFIX)
+    client_ip6 = next_available_ipv6(IP6_PREFIX)
     (peer_dir / "ip4").write_text(client_ip4 + "\n")
     (peer_dir / "ip6").write_text(client_ip6 + "\n")
 
@@ -291,9 +291,12 @@ SERVER_ID = config.ServerId
 SERVER_IP = config.ServerIP
 SECRET_KEY = config.SecretKey
 IP_PREFIX = config.IpPrefix
+IP6_PREFIX = config.Ip6Prefix
 SERVER_PORT = config.Port
 HOME_DIR = config.SaveDir
 API_URL = config.ApiUrl
+CLIENT_DNS_PRIMARY = '1.1.1.1'
+CLIENT_DNS_SECONDARY = '1.0.0.1'
 
 AUTH_INFO = {'UserID': 'APIUser', 'Password': '2017hacker'}
 REGISTER_REQ_INFO = {'ServerID': SERVER_ID, 'CommandCode': 101}
