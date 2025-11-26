@@ -96,7 +96,7 @@ def list_used_ips():
 
 def next_available_ip(ip_prefix: str) -> str:
     used = list_used_ips()
-    base = ip_prefix.rstrip('.')
+    base = ip_prefix.rstrip('.') + '.'
     for last in range(2, 255):
         candidate = f"{base}{last}"
         if candidate not in used:
