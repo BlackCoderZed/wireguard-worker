@@ -140,31 +140,35 @@ def ReadFileAsBase64(file_path):
 def SendKey(ticketInfo, conf_path, qr_path):
     print('Sending to API...')
 
-    # Read .conf as plain text
     keycontent_conf = ReadConfig(conf_path)
-
-    # Read QR code as base64 string
     keycontent_qr = ReadFileAsBase64(qr_path)
-
-    keyfiles = [
-        {
-            'KeyContent': keycontent_conf,
-            'KeyName': os.path.basename(conf_path),
-            'MediaType': 'text/plain'
-        }
-    ]
-
-    emailSendInfo = {
-        'ServerID': SERVER_ID,
-        'Email': ticketInfo.Email,
-        'Subject': 'Wireguard by IT-Solution',
-        'KeyFiles': keyfiles
-    }
+    keyname = os.path.basename(conf_path)
 
     client = Client(API_URL)
-    client.service.SendMultipleKey(AUTH_INFO, emailSendInfo)
+
+    # Create ReqMultiSendKeyInfo object
+    req = client.factory.create("ReqMultiSendKeyInfo")
+    req.ServerID = SERVER_ID
+    req.Email = ticketInfo.Email
+    req.Subject = "Wireguard by IT-Solution"
+
+    # Create KeyFiles list
+    req.KeyFiles = []
+
+    # Create KeyFileInfo object
+    keyfile = client.factory.create("KeyFileInfo")
+    keyfile.KeyContent = keycontent_conf
+    keyfile.KeyName = keyname
+    keyfile.MediaType = "text/plain"   # if exists in WSDL (else remove)
+
+    # Add into list
+    req.KeyFiles.append(keyfile)
+
+    # Call SOAP method
+    client.service.SendMultipleKey(AUTH_INFO, req)
 
     print('Complete...')
+
 #########################################################################################
 #                                  WG Operations                                        #
 #########################################################################################
