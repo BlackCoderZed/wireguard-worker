@@ -112,9 +112,9 @@ def next_available_ip(ip_prefix: str) -> str:
 
 def next_available_ipv6(ipv6_prefix: str) -> str:
     _, used_ipv6 = list_used_ips()
-    base = ipv6_prefix.rstrip(':') + ':'
+    prefix = ipv6_prefix.rstrip(':')  # e.g., 'fd42:42:42'
     for i in range(2, 65535):
-        candidate = f"{base}{i:x}"
+        candidate = f"{prefix}::{i:x}"
         if candidate not in used_ipv6:
             return candidate
     raise RuntimeError("No free IPv6 available")
