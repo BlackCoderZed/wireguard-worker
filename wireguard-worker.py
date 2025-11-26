@@ -105,6 +105,17 @@ def next_available_ip(ip_prefix: str) -> str:
             return candidate
     raise RuntimeError("No free IP available")
 
+def next_available_ipv6(ipv6_prefix: str, used=None) -> str:
+    """Get next available IPv6 address"""
+    if used is None:
+        used = set()
+    base = ipv6_prefix.rstrip(':') + ':'
+    for i in range(2, 65535):
+        candidate = f"{base}{i:x}"
+        if candidate not in used:
+            return candidate
+    raise RuntimeError("No free IPv6 available")
+
 def server_public_key():
     return run(f"wg show {WG_INTERFACE} public-key", capture=True)
 
