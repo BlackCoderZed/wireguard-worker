@@ -3,6 +3,7 @@
 	<ServerIP>18.139.18.18</ServerIP>
 	<SecretKey>-</SecretKey>
 	<IpPrefix>192.168.42.</IpPrefix>
+	<Ip6Prefix>fd42:42:42::</Ip6Prefix>
     <Port>443</Port>
 	<SaveDir>/home/ubuntu/client/</SaveDir>
 	<APIUrl>http://3.1.224.21:8999/VPNAPIService.svc?wsdl</APIUrl>
